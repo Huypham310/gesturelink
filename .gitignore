@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Data, models, recordings (collected locally, not committed)
+/data/
+/models/*.task
+/models/*.pt
+/models/*.onnx
+/runs/
+
+# Firmware build output
+firmware/.pio/
+
+# Node
+node_modules/
+web/dist/
+
+# Env and OS
+.env
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
