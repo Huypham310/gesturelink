@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "gestures": [
+    { "id": 0, "name": "open_palm", "description": "all five fingers extended, palm facing the camera" },
+    { "id": 1, "name": "fist", "description": "all fingers curled into the palm" },
+    { "id": 2, "name": "thumbs_up", "description": "fist with the thumb pointing up" },
+    { "id": 3, "name": "peace", "description": "index and middle finger extended (V sign)" },
+    { "id": 4, "name": "point", "description": "only the index finger extended" },
+    { "id": 5, "name": "ok", "description": "thumb and index tips touching, other fingers extended" },
+    { "id": 6, "name": "none", "description": "relaxed hand / transition, no command" }
+  ]
+}
