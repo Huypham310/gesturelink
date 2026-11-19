@@ -13,6 +13,7 @@ htmlcov/
 /models/*.task
 /models/*.pt
 /models/*.onnx
+/models/metrics.json
 /runs/
 
 # Firmware build output

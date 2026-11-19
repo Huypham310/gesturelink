@@ -60,6 +60,34 @@ Real recordings live in `data/` and are gitignored. `tests/fixtures/landmarks/sa
 140 synthetic samples (20 per gesture) so tests and CI run without a camera. See
 `models/README.md` for the model download.
 
+## Model
+
+A small MLP (`63 -> 128 -> 64 -> 7`, 16,903 parameters) on the normalized landmark vector. It
+runs on CPU; training on the fixture takes about a second.
+
+```bash
+gesturelink prepare                                        # data/raw -> data/processed
+gesturelink train                                          # configs/train.json defaults
+gesturelink train --epochs 100 --lr 0.0005 --seed 1        # override any config key
+gesturelink predict --input data/raw/syn.csv -v            # classify raw CSV rows
+```
+
+`train` keeps the epoch with the best val accuracy and writes `models/gesturelink.pt` and
+`models/metrics.json` (accuracy, macro F1, per-class report, confusion matrix, loss history).
+Training augments with small gaussian noise and random left/right mirroring. From Python:
+
+```python
+from gesturelink.model import GesturePredictor
+
+predictor = GesturePredictor("models/gesturelink.pt")
+pred = predictor.predict(landmarks)   # raw (21, 3) MediaPipe landmarks
+print(pred.label, pred.confidence)    # None if the hand is degenerate
+```
+
+Measured on synthetic data: 0.964 val accuracy on the 140-row test fixture (28 val samples),
+1.000 on 1,050 synthetic samples. Synthetic hands are easy; real numbers come after collecting
+real recordings. Details in `models/README.md`.
+
 ## License
 
 MIT
