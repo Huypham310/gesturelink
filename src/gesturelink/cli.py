@@ -109,6 +109,53 @@ def _synthesize(args: argparse.Namespace) -> int:
     return 0
 
 
+def _train(args: argparse.Namespace) -> int:
+    from gesturelink.data.labels import load_labels
+    from gesturelink.model.eval import format_report
+    from gesturelink.model.train import load_config, train
+
+    cfg = load_config(
+        args.config, epochs=args.epochs, lr=args.lr, batch_size=args.batch_size, seed=args.seed,
+        data=args.data, out_dir=args.out_dir,
+    )
+    labels = load_labels(args.labels)
+    metrics = train(cfg, labels)
+    print(format_report(metrics, labels.names))
+    print(
+        f"best epoch {metrics['best_epoch']} of {metrics['epochs_run']}, "
+        f"{metrics['train_seconds']}s -> {metrics['checkpoint']}"
+    )
+    return 0
+
+
+def _predict(args: argparse.Namespace) -> int:
+    from gesturelink.data.io import find_csv_files, iter_samples
+    from gesturelink.model.predict import GesturePredictor
+
+    predictor = GesturePredictor(args.checkpoint, mirror_left=args.mirror_left)
+    samples = [s for f in find_csv_files(args.input) for s in iter_samples(f)]
+    if args.limit:
+        samples = samples[: args.limit]
+    if not samples:
+        print("no samples to classify")
+        return 1
+    preds = predictor.predict_batch(
+        [s.landmarks for s in samples], [s.handedness for s in samples]
+    )
+    correct = skipped = 0
+    for s, p in zip(samples, preds, strict=True):
+        if p is None:  # degenerate hand, nothing to classify
+            skipped += 1
+            continue
+        correct += p.label == s.label
+        if args.verbose:
+            mark = "ok " if p.label == s.label else "BAD"
+            print(f"{mark} true={s.label:<10} pred={p.label:<10} conf={p.confidence:.2f}")
+    used = len(samples) - skipped
+    print(f"{correct}/{used} correct ({correct / max(used, 1):.1%}), {skipped} skipped")
+    return 0
+
+
 def _download_model(args: argparse.Namespace) -> int:
     from gesturelink.data.landmarks import MODEL_URL, download_model
 
@@ -156,6 +203,23 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--url", default=None, help="override the default Google storage URL")
     p.add_argument("--force", action="store_true", help="download again even if it exists")
 
+    p = sub.add_parser("train", help="train the gesture classifier on data/processed")
+    p.add_argument("--config", default=None, help="train config json (default configs/train.json)")
+    p.add_argument("--data", default=None, help="dataset.npz (overrides the config)")
+    p.add_argument("--out-dir", default=None, help="where to write the .pt and metrics.json")
+    p.add_argument("--epochs", type=int, default=None)
+    p.add_argument("--lr", type=float, default=None)
+    p.add_argument("--batch-size", type=int, default=None)
+    p.add_argument("--seed", type=int, default=None)
+    p.add_argument("--labels", default=None)
+
+    p = sub.add_parser("predict", help="classify raw landmark CSV rows with a trained model")
+    p.add_argument("--input", required=True, help="a raw landmark CSV or a folder of them")
+    p.add_argument("--checkpoint", default="models/gesturelink.pt")
+    p.add_argument("--limit", type=int, default=0, help="only the first N rows")
+    p.add_argument("--mirror-left", action="store_true", help="use if prepare ran with it")
+    p.add_argument("--verbose", "-v", action="store_true", help="print every row")
+
     args = parser.parse_args(argv)
     handlers = {
         "info": lambda a: _info(),
@@ -163,6 +227,8 @@ def main(argv: list[str] | None = None) -> int:
         "prepare": _prepare,
         "synthesize": _synthesize,
         "download-model": _download_model,
+        "train": _train,
+        "predict": _predict,
     }
     if args.command in handlers:
         return handlers[args.command](args)
