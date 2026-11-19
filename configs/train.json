@@ -1,0 +1,16 @@
+{
+  "seed": 42,
+  "hidden": [128, 64],
+  "dropout": 0.1,
+  "epochs": 80,
+  "batch_size": 32,
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "noise_std": 0.01,
+  "mirror_prob": 0.5,
+  "patience": 15,
+  "data": "data/processed/dataset.npz",
+  "meta": "data/processed/meta.json",
+  "out_dir": "models",
+  "checkpoint_name": "gesturelink.pt"
+}
