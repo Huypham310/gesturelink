@@ -1,0 +1,8 @@
+[wokwi]
+version = 1
+# build first with `pio run` inside firmware/
+firmware = '../.pio/build/uno/firmware.hex'
+elf = '../.pio/build/uno/firmware.elf'
+# expose the simulated serial port so the host tools can talk to it:
+#   gesturelink board --port rfc2217://localhost:4000 ping
+rfc2217ServerPort = 4000

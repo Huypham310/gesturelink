@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "author": "gesturelink",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-arduino-uno", "id": "uno", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-servo", "id": "servo1", "top": -120, "left": 240, "attrs": {} },
+    { "type": "wokwi-lcd1602", "id": "lcd1", "top": -310, "left": -20, "attrs": { "pins": "full" } },
+    { "type": "wokwi-led", "id": "led0", "top": -210, "left": 320, "attrs": { "color": "red" } },
+    { "type": "wokwi-led", "id": "led1", "top": -210, "left": 370, "attrs": { "color": "yellow" } },
+    { "type": "wokwi-led", "id": "led2", "top": -210, "left": 420, "attrs": { "color": "green" } },
+    { "type": "wokwi-led", "id": "led3", "top": -210, "left": 470, "attrs": { "color": "blue" } },
+    { "type": "wokwi-resistor", "id": "r0", "top": -130, "left": 305, "rotate": 90, "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": -130, "left": 355, "rotate": 90, "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": -130, "left": 405, "rotate": 90, "attrs": { "value": "220" } },
+    { "type": "wokwi-resistor", "id": "r3", "top": -130, "left": 455, "rotate": 90, "attrs": { "value": "220" } }
+  ],
+  "connections": [
+    ["uno:9", "servo1:PWM", "orange", ["v-30", "h120"]],
+    ["uno:5V", "servo1:V+", "red", ["v30", "h200"]],
+    ["uno:GND.2", "servo1:GND", "black", ["v40", "h210"]],
+
+    ["uno:2", "r0:1", "red", ["v-20"]],
+    ["r0:2", "led0:A", "red", ["v0"]],
+    ["led0:C", "uno:GND.1", "black", ["v20"]],
+    ["uno:3", "r1:1", "yellow", ["v-20"]],
+    ["r1:2", "led1:A", "yellow", ["v0"]],
+    ["led1:C", "uno:GND.1", "black", ["v20"]],
+    ["uno:8", "r2:1", "green", ["v-20"]],
+    ["r2:2", "led2:A", "green", ["v0"]],
+    ["led2:C", "uno:GND.1", "black", ["v20"]],
+    ["uno:10", "r3:1", "blue", ["v-20"]],
+    ["r3:2", "led3:A", "blue", ["v0"]],
+    ["led3:C", "uno:GND.1", "black", ["v20"]],
+
+    ["lcd1:VSS", "uno:GND.1", "black", ["v0"]],
+    ["lcd1:VDD", "uno:5V", "red", ["v0"]],
+    ["lcd1:V0", "uno:GND.1", "black", ["v0"]],
+    ["lcd1:RW", "uno:GND.1", "black", ["v0"]],
+    ["lcd1:K", "uno:GND.1", "black", ["v0"]],
+    ["lcd1:A", "uno:5V", "red", ["v0"]],
+    ["lcd1:RS", "uno:12", "blue", ["v0"]],
+    ["lcd1:E", "uno:11", "purple", ["v0"]],
+    ["lcd1:D4", "uno:7", "green", ["v0"]],
+    ["lcd1:D5", "uno:6", "green", ["v0"]],
+    ["lcd1:D6", "uno:5", "green", ["v0"]],
+    ["lcd1:D7", "uno:4", "green", ["v0"]]
+  ],
+  "dependencies": {}
+}
