@@ -164,6 +164,53 @@ def _download_model(args: argparse.Namespace) -> int:
     return 0
 
 
+def _board(args: argparse.Namespace) -> int:
+    from gesturelink.serial_client import (
+        BoardClient,
+        BoardError,
+        BoardTimeout,
+        ProtocolError,
+        find_board_port,
+    )
+
+    if args.board_cmd is None:
+        print("pick a board command: ping, servo, led, lcd, status")
+        return 2
+    port = args.port or find_board_port()
+    if port is None:
+        print("no Arduino found, plug it in or pass --port (COM3, rfc2217://localhost:4000)")
+        return 1
+    try:
+        with BoardClient(port, baud=args.baud, timeout=args.timeout) as board:
+            if args.board_cmd == "ping":
+                print(board.ping().raw)
+            elif args.board_cmd == "servo":
+                print(board.servo(args.degrees).raw)
+            elif args.board_cmd == "led":
+                print(board.led(args.value).raw)
+            elif args.board_cmd == "lcd":
+                print(board.lcd(args.row, " ".join(args.text)).raw)
+            elif args.board_cmd == "status":
+                s = board.status()
+                print(f"servo={s.servo} led={s.led} uptime_ms={s.uptime_ms}")
+    except ProtocolError as exc:  # board sent something we can't parse
+        print(f"unexpected reply: {exc}")
+        return 1
+    except ValueError as exc:  # bad argument, nothing was sent (sai tham số, chưa gửi gì)
+        print(f"invalid argument: {exc}")
+        return 2
+    except BoardError as exc:
+        print(exc)
+        return 1
+    except BoardTimeout as exc:
+        print(f"{exc} (is the right port selected and the firmware flashed?)")
+        return 1
+    except OSError as exc:  # port busy / missing
+        print(f"cannot open {port}: {exc}")
+        return 1
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="gesturelink", description=__doc__)
     parser.add_argument("--version", action="version", version=__version__)
@@ -220,6 +267,23 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--mirror-left", action="store_true", help="use if prepare ran with it")
     p.add_argument("--verbose", "-v", action="store_true", help="print every row")
 
+    p = sub.add_parser("board", help="send commands to the Arduino over serial")
+    p.add_argument(
+        "--port", default=None, help="COM3, /dev/ttyACM0 or rfc2217://host:port (default: auto)"
+    )
+    p.add_argument("--baud", type=int, default=115200)
+    p.add_argument("--timeout", type=float, default=2.0, help="seconds to wait for a reply")
+    bsub = p.add_subparsers(dest="board_cmd")
+    bsub.add_parser("ping", help="check the firmware answers")
+    bp = bsub.add_parser("servo", help="move the servo")
+    bp.add_argument("degrees", type=int, help="0-180")
+    bp = bsub.add_parser("led", help="set the LEDs")
+    bp.add_argument("value", help="on, off or a bit mask 0-15 (e.g. 5 or 0x5)")
+    bp = bsub.add_parser("lcd", help="write text on one LCD row")
+    bp.add_argument("row", type=int, help="0 or 1")
+    bp.add_argument("text", nargs="*", help="up to 16 characters")
+    bsub.add_parser("status", help="read back servo, LED mask and uptime")
+
     args = parser.parse_args(argv)
     handlers = {
         "info": lambda a: _info(),
@@ -229,6 +293,7 @@ def main(argv: list[str] | None = None) -> int:
         "download-model": _download_model,
         "train": _train,
         "predict": _predict,
+        "board": _board,
     }
     if args.command in handlers:
         return handlers[args.command](args)
